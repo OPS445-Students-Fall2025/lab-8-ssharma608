@@ -1,0 +1,77 @@
+---
+- name: OPS445 VM Configs
+  hosts: vmlab
+  user: student
+  become: yes
+
+  vars:
+    seneca_id: ssharma608
+
+  tasks:
+
+    - name: Update Apache 
+      yum:
+        name: httpd
+        state: latest
+
+    - name: Install EPEL repo
+      yum:
+        name: epel-release
+        state: present
+
+    - name: Remove 'tree' package
+      yum:
+        name: tree
+        state: absent
+
+    - name: Set hostname
+      hostname:
+        name: "{{ seneca_id }}"
+
+    - name: Create new user
+      user:
+        name: "{{ seneca_id }}"
+        state: present
+        shell: /bin/bash
+        create_home: yes
+
+    - name: New user with sudo access
+      copy:
+        dest: "/etc/sudoers.d/{{ seneca_id }}"
+        content: "{{ seneca_id }} ALL=(ALL) NOPASSWD:ALL\n"
+        owner: root
+        group: root
+        mode: '0440'
+
+    - name: ssh directory for new user
+      file:
+        path: "/home/{{ seneca_id }}/.ssh"
+        state: directory
+        owner: "{{ seneca_id }}"
+        group: "{{ seneca_id }}"
+        mode: "0700"
+
+    - name: Copy  public key to authorize new user
+      copy:
+        src: "~/.ssh/id_rsa.pub"
+        dest: "/home/{{ seneca_id }}/.ssh/authorized_keys"
+        owner: "{{ seneca_id }}"
+        group: "{{ seneca_id }}"
+        mode: "0600"
+
+    - name: create lab directories
+      file:
+        path: "/home/{{ seneca_id }}/ops445/{{ item }}"
+        state: directory
+        owner: "{{ seneca_id }}"
+        group: "{{ seneca_id }}"
+        mode: 0755
+      loop:
+        - lab1
+        - lab2
+        - lab3
+        - lab4
+        - lab5
+        - lab6
+        - lab7
+        - lab8
